@@ -1,0 +1,34 @@
+REPORT ZPRG3_FILEHANDLING_30.
+
+data : lv_vbeln TYPE vbeln_va.
+
+SELECT-OPTIONS : s_vbeln for lv_vbeln.
+
+TYPES : BEGIN OF lty_data,
+       vbeln TYPE vbeln_va,
+       erdat TYPE erdat,
+       erzet TYPE erzet,
+       vbtyp TYPE vbtyp,
+     END OF lty_data.
+
+ data : lt_data TYPE TABLE OF lty_data,
+        lwa_data TYPE lty_data.
+
+ data : lv_filename(20) TYPE c VALUE '/tmp/order.txt'.
+ data : lv_string TYPE string.
+
+SELECT vbeln erdat erzet vbtyp
+FROM vbak
+into TABLE lt_data
+WHERE vbeln in s_vbeln.
+
+ open DATASET lv_filename for OUTPUT in TEXT MODE ENCODING DEFAULT.
+  IF sy-subrc = 0 .
+  LOOP AT lt_data INTO lwa_data.
+  CONCATENATE lwa_data-vbeln lwa_data-erdat
+              lwa_data-erzet lwa_data-vbtyp
+              into lv_string SEPARATED BY '#'.
+  TRANSFER lv_string to lv_filename.
+  ENDLOOP.
+  CLOSE DATASET lv_filename.
+  ENDIF.
