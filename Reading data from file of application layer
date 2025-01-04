@@ -1,0 +1,50 @@
+REPORT ZPRG4_FILEHANDLING_30.
+
+TYPES : BEGIN OF lty_data,
+       vbeln TYPE vbeln_va,
+       erdat TYPE erdat,
+       erzet TYPE erzet,
+       vbtyp TYPE vbtyp,
+     END OF lty_data.
+
+ data : lt_data TYPE TABLE OF lty_data,
+        lwa_data TYPE lty_data.
+
+data : lv_afile(30) TYPE c VALUE '/usr/sap/DPK/SYS/src/order.txt'.
+data : lv_filename(20) TYPE c VALUE '/tmp/order.txt'.
+data : lv_string TYPE string.
+
+OPEN DATASET lv_filename for INPUT in TEXT MODE ENCODING DEFAULT.
+IF sy-subrc = 0.
+  DO.
+  READ DATASET lv_filename INTO lv_string.
+  IF sy-subrc = 0.
+   SPLIT lv_string at '#' INTO lwa_data-vbeln lwa_data-erdat
+                               lwa_data-erzet lwa_data-vbtyp.
+   APPEND lwa_data to lt_data.
+   CLEAR : lwa_data.
+  else.
+  exit.
+  ENDIF.
+
+  ENDDO.
+  CLOSE DATASET lv_filename.
+
+ENDIF.
+
+OPEN DATASET lv_afile FOR OUTPUT in TEXT MODE ENCODING DEFAULT.
+IF sy-subrc = 0.
+LOOP AT lt_data into lwa_data..
+CONCATENATE lwa_data-vbeln lwa_data-erdat
+            lwa_data-erzet lwa_data-vbtyp
+       into lv_string SEPARATED BY '#'.
+TRANSFER lv_string to lv_afile.
+ENDLOOP.
+CLOSE DATASET lv_afile.
+DELETE DATASET lv_filename.
+ENDIF.
+
+LOOP AT lt_data INTO lwa_data.
+ WRITE : / lwa_data-vbeln , lwa_data-erdat,
+           lwa_data-erzet , lwa_data-vbtyp.
+ENDLOOP.
